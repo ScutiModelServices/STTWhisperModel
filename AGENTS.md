@@ -1,4 +1,4 @@
-# WhisperModel
+# STTWhisperModel
 
 faster-whisper (`base.en`, int8, CPU) served over HTTP, behind the shared model-service admin page, tokens and settings. Port 9230, env prefix `WHISPER_`, token prefix `whisper_`. The model half of `AI/ToolServices/Scribe` (which keeps ffmpeg, quota, uploads and live dictation). Requirements: `AI/ModelServices/_docs/WHISPER-SERVICE-REQUIREMENTS.md`.
 

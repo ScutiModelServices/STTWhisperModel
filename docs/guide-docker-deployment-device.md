@@ -1,14 +1,14 @@
-# WhisperModel: Docker on a deployment machine
+# STTWhisperModel: Docker on a deployment machine
 
 Run Whisper on the CPU on a separate always-on machine (default `lex@scutiserver1.local`, folder
-`/media/ZimaOS-HD/Apps/WhisperModel`). Callers reach it over the published port.
+`/media/ZimaOS-HD/Apps/STTWhisperModel`). Callers reach it over the published port.
 
 ## Requirements on the machine
 - Docker + Compose v2, and ssh access (root over ssh is refused; use the normal user).
 - Enough RAM for the model times `WHISPER_REPLICAS`.
 
 ## 1. Publish the code (from your PC)
-Run `WhisperModel\tools\deploy.bat`. Menu:
+Run `STTWhisperModel\tools\deploy.bat`. Menu:
 
 | Option | Does |
 |---|---|
@@ -25,8 +25,8 @@ Keep your own target in the git-ignored `tools\deploy.local.bat` (copy `tools\de
 ## 2. First-time setup on the machine
 ```bash
 mkdir -p /media/ZimaOS-HD/Apps
-git clone -b live <your-repo-url> /media/ZimaOS-HD/Apps/WhisperModel
-cd /media/ZimaOS-HD/Apps/WhisperModel
+git clone -b live <your-repo-url> /media/ZimaOS-HD/Apps/STTWhisperModel
+cd /media/ZimaOS-HD/Apps/STTWhisperModel
 ```
 Create `.env` (deploy option 2 copies yours, or `cp .env.example .env` and edit):
 - `WHISPER_ADMIN_PASSWORD`: a real password.
@@ -56,7 +56,7 @@ The first start downloads about 150 MB of weights into the `models` volume; `whi
 
 ## Updating
 ```bash
-cd /media/ZimaOS-HD/Apps/WhisperModel
+cd /media/ZimaOS-HD/Apps/STTWhisperModel
 git pull
 docker compose up -d --build
 docker compose restart whisper_lb

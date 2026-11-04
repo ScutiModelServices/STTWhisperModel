@@ -1,6 +1,6 @@
-# Deploying WhisperModel
+# Deploying STTWhisperModel
 
-WhisperModel is one HTTP service (port 9230). It runs as `whisper` replicas behind an nginx load balancer,
+STTWhisperModel is one HTTP service (port 9230). It runs as `whisper` replicas behind an nginx load balancer,
 `whisper_lb`. Callers use `http://<host>:9230`; they never reach a replica directly.
 
 ## Requirements
@@ -72,4 +72,4 @@ Updating the service itself: `docker compose up -d --build`, then `docker compos
 
 A plain publish (`tools\deploy.bat` option 1) only updates the `live` branch. For a release set `VERSION` (and
 `pyproject.toml` to the same number), commit, then run `tools\deploy.bat` option R or
-`py tools\publish_live.py --release`. `tools\make_zip.bat` then builds `zip_versions\WhisperModel-<VERSION>.zip`.
+`py tools\publish_live.py --release`. `tools\make_zip.bat` then builds `zip_versions\STTWhisperModel-<VERSION>.zip`.

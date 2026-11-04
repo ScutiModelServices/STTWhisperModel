@@ -1,4 +1,4 @@
-# WhisperModel: Docker Desktop on this PC
+# STTWhisperModel: Docker Desktop on this PC
 
 Run Whisper on the CPU in Docker Desktop on the machine you work on, so other programs on it can call it.
 
@@ -8,7 +8,7 @@ Run Whisper on the CPU in Docker Desktop on the machine you work on, so other pr
 - Internet on the first start (about 150 MB of weights).
 
 ## Steps
-1. Configure. In `WhisperModel/`:
+1. Configure. In `STTWhisperModel/`:
    ```bash
    cp .env.example .env
    ```
