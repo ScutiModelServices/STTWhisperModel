@@ -1,4 +1,4 @@
-# WhisperModel
+# STTWhisperModel
 
 The one place Whisper speech-to-text is served: `faster-whisper` (CTranslate2) with `base.en` by default, on the CPU.
 Projects send 16 kHz mono PCM over HTTP and get text, segments and word timestamps back. It has the same admin page,

@@ -288,7 +288,7 @@ dialog p { overflow-wrap: anywhere; }
 </dialog>
 <script>
 // Per-service configuration. The rest of this page is shared verbatim.
-const CONFIG = {title: "WhisperModel", address: location.origin, threadLabel: "CPU threads", threadField: "num_thread", adminEnv: "WHISPER_ADMIN_PASSWORD", replicasEnv: "WHISPER_REPLICAS", extraTile: {label: "Parallel transcriptions", field: "parallel"}, updates: true};
+const CONFIG = {title: "STTWhisperModel", address: location.origin, threadLabel: "CPU threads", threadField: "num_thread", adminEnv: "WHISPER_ADMIN_PASSWORD", replicasEnv: "WHISPER_REPLICAS", extraTile: {label: "Parallel transcriptions", field: "parallel"}, updates: true};
 
 const $ = id => document.getElementById(id);
 const storageKey = CONFIG.title + ":admin";
