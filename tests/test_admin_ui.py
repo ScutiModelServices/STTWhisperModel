@@ -36,7 +36,11 @@ def base_url():
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
+    deadline = time.monotonic() + 15
     while not server.started:
+        if not thread.is_alive() or time.monotonic() >= deadline:
+            server.should_exit = True
+            pytest.fail("Browser test server did not start within 15 seconds")
         time.sleep(0.05)
     yield f"http://127.0.0.1:{port}/admin/"
     server.should_exit = True
@@ -143,3 +147,78 @@ def test_settings_can_be_saved_and_reset(page):
     sync_api.expect(page.locator("#setting-max_inflight")).to_have_value("3")
     page.get_by_role("button", name="Reset Calls allowed to wait for the model").click()
     sync_api.expect(page.locator("#setting-max_inflight")).to_have_value("0")
+
+
+def _open_playground(page):
+    """Use separate admin and public credentials."""
+    page.fill("#admin", PASSWORD)
+    page.click("#signin-button")
+    sync_api.expect(page.locator("#playground")).to_be_visible()
+    made = page.request.post(page.url.rstrip("/") + "/tokens",
+                             headers={"X-Internal-Token": PASSWORD}, data={"name": "playground-browser"})
+    assert made.status == 200
+    token = made.json()["token"]
+    page.fill("#pg-token", token)
+    return token
+
+
+def _assert_playground_finished(page, token):
+    sync_api.expect(page.locator("#pg-status")).to_contain_text("HTTP 200", timeout=15000)
+    sync_api.expect(page.locator("#pg-send")).to_be_enabled(timeout=15000)
+    assert "<SERVICE_TOKEN>" in page.locator("#pg-curl").text_content()
+    assert token not in page.locator("#pg-curl").text_content()
+    assert PASSWORD not in page.locator("#pg-curl").text_content()
+    stored = page.evaluate("() => [...Object.values(localStorage), ...Object.values(sessionStorage)]")
+    assert not any(token in value for value in stored)
+
+
+def test_playground_uses_public_route_and_renders_answer(page):
+    """Exercise real public auth and the family fake engine."""
+    token = _open_playground(page)
+    page.set_input_files("#pg-file", {"name": "speech.pcm", "mimeType": "application/octet-stream",
+                                       "buffer": b"\x01\x00" * 16000})
+    page.click("#pg-send")
+    _assert_playground_finished(page, token)
+    sync_api.expect(page.locator("#pg-output")).to_contain_text("Hello world.")
+
+
+def test_playground_rejects_oversized_upload_before_request(page):
+    _open_playground(page)
+    sent = []
+    page.on("request", lambda request: sent.append(request.url) if "/v1/transcribe" in request.url else None)
+    page.set_input_files("#pg-file", {"name": "large.pcm", "mimeType": "application/octet-stream",
+                                       "buffer": b"\0" * (10 * 1024 * 1024 + 1)})
+    page.click("#pg-send")
+    sync_api.expect(page.locator("#pg-status")).to_contain_text("10 MiB")
+    sync_api.expect(page.locator("#pg-send")).to_be_enabled()
+    assert sent == []
+
+
+def test_playground_decodes_wav_to_public_pcm_contract(page):
+    import io
+    import wave
+
+    token = _open_playground(page)
+    audio = io.BytesIO()
+    with wave.open(audio, "wb") as wav:
+        wav.setnchannels(2)
+        wav.setsampwidth(2)
+        wav.setframerate(8000)
+        wav.writeframes(b"\x01\x00\x02\x00" * 8000)
+    sent = []
+    page.on("request", lambda request: sent.append(request) if "/v1/transcribe" in request.url else None)
+    page.evaluate("""() => {
+        const original = window.fetch;
+        window.fetch = async (url, init) => {
+            if (String(url).includes('/v1/transcribe')) window.sentPcmBytes = (await init.body.arrayBuffer()).byteLength;
+            return original(url, init);
+        };
+    }""")
+    page.set_input_files("#pg-file", {"name": "speech.wav", "mimeType": "audio/wav", "buffer": audio.getvalue()})
+    page.click("#pg-send")
+    _assert_playground_finished(page, token)
+    sync_api.expect(page.locator("#pg-output")).to_contain_text("Hello world.")
+    assert len(sent) == 1
+    assert page.evaluate("window.sentPcmBytes") == 32000
+    assert sent[0].headers["content-type"] == "application/octet-stream"
+    assert "@input.pcm" in page.locator("#pg-curl").text_content()
