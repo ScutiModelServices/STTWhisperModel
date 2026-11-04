@@ -1,0 +1,82 @@
+# WhisperModel
+
+The one place Whisper speech-to-text is served: `faster-whisper` (CTranslate2) with `base.en` by default, on the CPU.
+Projects send 16 kHz mono PCM over HTTP and get text, segments and word timestamps back. It has the same admin page,
+tokens, rate limits, metrics, settings and update checks as the other model services.
+
+It is the model half of `AI/ToolServices/Scribe`: Scribe keeps ffmpeg decoding, per-user quota, the upload store and live
+dictation, and calls this service for the transcription (`SCRIBE_WHISPER_URL`).
+
+## API
+
+| Call | Purpose |
+|---|---|
+| `POST /v1/transcribe` | Body: raw PCM. Query: `language`, `beam_size`, `word_timestamps`, `stream`. → `{"text", "language", "segments", "words", "duration_s", "model", "duration_ms"}`. |
+| `GET /health` | `{"status": "ok", "model", "ready", "num_thread"}`; `ready` is true once the model is loaded. No token needed. |
+
+**Input.** The body is 16 kHz, mono, signed 16-bit little-endian PCM (`application/octet-stream`), what
+`ffmpeg -f s16le -ar 16000 -ac 1` makes. The service does not decode other formats. An empty body or an odd byte count
+is 422; more than *Longest audio per call* (`WHISPER_MAX_SECONDS`, default 150, at most 900) is 413.
+
+**Query options.** `language` (default `en`; `auto` detects; a two or three letter code), `beam_size` (1 to 10,
+default 1), `word_timestamps` (default `true`), `stream` (default `false`). Any other option is refused with 422. An
+English-only model (a name ending in `.en`) refuses any language other than `en` with 422.
+
+**Result.** `segments` are `{"start_s", "end_s", "text"}`; `words` are the same shape per word (empty when
+`word_timestamps` is false); `text` joins the non-empty segments with a space. An empty `text` is valid (silence).
+
+**Streaming, per segment.** With `stream=true` the reply is `application/x-ndjson`: one
+`{"type": "segment", "start_s", "end_s", "text"}` line per segment, then `{"type": "done", ...}` holding the same body a
+call without `stream` returns. A refusal before the first segment is a normal HTTP error; a failure after it is sent as
+`{"type": "error", "status", "message"}` and ends the stream. A kept answer is streamed back segment by segment.
+
+**Cache.** *Answers kept per replica* (`WHISPER_CACHE_SIZE`, default 256, 0 = off) keeps the last answers for the same
+audio and options and sends them again without transcribing (`X-Cache: hit`). Decoding is deterministic, so every request
+is kept. New weights empty the cache. The cache is per replica, so with N replicas the hit rate is about 1/N.
+
+**Tokens.** A token's "allowed projects" list has no effect here: there is one model and no project models.
+
+## Admin page
+
+`/admin/` (password `WHISPER_ADMIN_PASSWORD`): tokens with rate limit and expiry, usage numbers, CPU threads, the
+Settings card (update check hours, in-flight cap, answers kept, longest audio, silence filter, and the restart options
+model, number format, load at start), and the Updates card (**Check now** and **Download new weights** for the Hugging
+Face repository). New weights are downloaded once into the shared models volume; the other replicas notice within a few
+seconds and load them on their next request. `/metrics` (admin password) is Prometheus text per token.
+`whisper_request_seconds` is a histogram of how long each `/v1` call took on the replica that answers.
+
+Changing the CPU threads reloads the model on that replica (CTranslate2 fixes its threads when the model is built); the
+next call loads it again. Set the value to the physical core count.
+
+## Run
+
+```bash
+docker compose up -d --build        # http://<host>:9230
+```
+
+Without Docker: `run.bat` (uv, listens on `127.0.0.1:9230`). The first transcription downloads the model (about 150 MB
+for `base.en`). See `deployment.md`.
+
+Example (needs `ffmpeg`):
+
+```bash
+ffmpeg -v error -i speech.wav -f s16le -ar 16000 -ac 1 - | curl -X POST "http://127.0.0.1:9230/v1/transcribe" \
+  -H "X-Internal-Token: whisper_..." --data-binary @-
+```
+
+## Tests
+
+```bash
+uv sync
+uv run pytest
+```
+
+The tests use a fake model; none loads real weights.
+
+## Limits worth knowing
+
+- One transcription at a time per replica; extra calls wait, and more than the in-flight cap get 429.
+- The rate limit is per replica.
+- Speed on a 6-core CPU, measured in Scribe: `base.en` about 1.6x real time, `small.en` about 0.5x. Raise the model and
+  *Longest audio per call* together, and keep the audio under the caller's timeout.
+- Model errors are never sent to the caller (they can hold paths): the reply is "Transcription failed. Try again."
