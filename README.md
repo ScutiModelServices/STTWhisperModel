@@ -80,3 +80,10 @@ The tests use a fake model; none loads real weights.
 - Speed on a 6-core CPU, measured in Scribe: `base.en` about 1.6x real time, `small.en` about 0.5x. Raise the model and
   *Longest audio per call* together, and keep the audio under the caller's timeout.
 - Model errors are never sent to the caller (they can hold paths): the reply is "Transcription failed. Try again."
+
+
+## Try it from the admin page
+
+Open `/admin/` and use **Try it** to call the public API with a service token held only in memory. Runs use normal token scopes, limits and caches; the panel shows HTTP status, latency, responses, cancellation and a curl equivalent with a token placeholder. See [the web UI guide](docs/guide-web-ui.md#try-it-send-a-real-request).
+
+Transcribe accepts an audio file and sends raw 16 kHz mono signed 16-bit little-endian PCM to `POST /v1/transcribe`. Browser-decodable encoded audio is converted in the browser; raw `.pcm` input must already have that format. Language, beam size, word timestamps and streaming are query options. Decoded audio is capped at 150 seconds in the browser; the server can impose a lower limit. The curl body for converted audio is `@input.pcm`, not the original encoded file.

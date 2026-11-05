@@ -64,7 +64,7 @@ class Loaded:
 
 def load(model: str, compute_type: str, threads: int) -> Loaded:
     """Use the cached files when they are there (no network), otherwise download them."""
-    from faster_whisper import STTWhisperModel
+    from faster_whisper import WhisperModel
     from huggingface_hub import snapshot_download
 
     repo = repo_of(model)
@@ -72,7 +72,7 @@ def load(model: str, compute_type: str, threads: int) -> Loaded:
         path = snapshot_download(repo_id=repo, local_files_only=True, token=False)
     except Exception:
         path = snapshot_download(repo_id=repo, token=False)
-    return Loaded(STTWhisperModel(path, device="cpu", compute_type=compute_type, cpu_threads=threads))
+    return Loaded(WhisperModel(path, device="cpu", compute_type=compute_type, cpu_threads=threads))
 
 
 def _remote_sha(repo: str) -> str:
