@@ -1,5 +1,5 @@
 [project]
-name = "whisper-service"
+name = "stt_whisper_model"
 description = "One HTTP service that runs the Whisper speech-to-text model (faster-whisper) on the CPU for every project"
 version = "0.1.0"
 license = "MIT"

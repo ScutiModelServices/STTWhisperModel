@@ -1,4 +1,4 @@
-# STTWhisperModel: without Docker, on Windows
+# STT_Whisper_Model: without Docker, on Windows
 
 Run Whisper on the CPU directly with Python: one process, no load balancer, listening on `127.0.0.1:9230`.
 
@@ -8,12 +8,12 @@ Run Whisper on the CPU directly with Python: one process, no load balancer, list
 - RAM for the model (one copy).
 
 ## Start
-Double-click `run.bat`, or run it in a terminal from `STTWhisperModel\`. Choose **1 Run the service** in the menu, or run `run.bat run` to skip the menu. It runs `uv sync` to create or update `.venv`, then starts
+Double-click `run.bat`, or run it in a terminal from `STT_Whisper_Model\`. Choose **1 Run the service** in the menu, or run `run.bat run` to skip the menu. It runs `uv sync` to create or update `.venv`, then starts
 `python src/app.py`. The first start downloads about 150 MB of weights.
 
 Linux or macOS:
 ```bash
-cd STTWhisperModel
+cd STT_Whisper_Model
 uv sync
 uv run python src/app.py
 ```
