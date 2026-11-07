@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Breaking: common service environment variables
+
+Service-owned environment variables now use `SERVICE_*`. Old names are no longer read.
+Rename old names once in your real `.env`, Compose `environment:` block, and CI/secret settings.
+
+| Old name | New name |
+|---|---|
+| `WHISPER_ADMIN_PASSWORD` | `SERVICE_ADMIN_PASSWORD` |
+| `WHISPER_CACHE_SIZE` | `SERVICE_CACHE_SIZE` |
+| `WHISPER_COMPUTE_TYPE` | `SERVICE_COMPUTE_TYPE` |
+| `WHISPER_HOST` | `SERVICE_HOST` |
+| `WHISPER_MAX_INFLIGHT` | `SERVICE_MAX_INFLIGHT` |
+| `WHISPER_MAX_SECONDS` | `SERVICE_MAX_SECONDS` |
+| `WHISPER_MEM_LIMIT` | `SERVICE_MEM_LIMIT` |
+| `WHISPER_MODEL` | `SERVICE_MODEL` |
+| `WHISPER_NUM_THREAD` | `SERVICE_NUM_THREAD` |
+| `WHISPER_PORT` | `SERVICE_PORT` |
+| `WHISPER_REPLICAS` | `SERVICE_REPLICAS` |
+| `WHISPER_TOKENS_FILE` | `SERVICE_TOKENS_FILE` |
+| `WHISPER_UPDATE_CHECK_HOURS` | `SERVICE_UPDATE_CHECK_HOURS` |
+| `WHISPER_VAD_FILTER` | `SERVICE_VAD_FILTER` |
+| `WHISPER_WARM` | `SERVICE_WARM` |
+| `WHISPER_WEB_DIR` | `SERVICE_WEB_DIR` |
+| `WHISPER_WEIGHTS_MARKER` | `SERVICE_WEIGHTS_MARKER` |
+
 - Move the default service port from 9230 to 29300, including API replicas and the nginx load balancer. Update any explicit old port in your real `.env`, saved tool-service `backends.json` connections, and browser or MCP client configuration once. With Compose defaults, recreate the stack to use the new host and container ports; a custom host-port override stays as configured, while container ports still change to 29300.
 
 - Renamed `STTWhisperModel` to `STT_Whisper_Model`; Docker project, API image, services, load balancer and volumes now use `stt_whisper_model` names. Callers on `citadel_core` connect to `stt_whisper_model_lb` at the existing port.
