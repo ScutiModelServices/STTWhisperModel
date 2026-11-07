@@ -1,7 +1,7 @@
 # Deploying STT_Whisper_Model
 
-STT_Whisper_Model is one HTTP service (port 9230). It runs as `stt_whisper_model` replicas behind an nginx load balancer,
-`stt_whisper_model_lb`. Callers use `http://<host>:9230`; they never reach a replica directly.
+STT_Whisper_Model is one HTTP service (port 29300). It runs as `stt_whisper_model` replicas behind an nginx load balancer,
+`stt_whisper_model_lb`. Callers use `http://<host>:29300`; they never reach a replica directly.
 
 ## Ways to run it
 

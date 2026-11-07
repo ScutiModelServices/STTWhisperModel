@@ -34,7 +34,7 @@ cd /media/ZimaOS-HD/Apps/STT_Whisper_Model
 Create `.env` (deploy option 2 copies yours, or `cp .env.example .env` and edit):
 - `WHISPER_ADMIN_PASSWORD`: a real password.
 - `WHISPER_REPLICAS=1` unless you have the memory for more.
-- `WHISPER_PORT=9230` (published on all interfaces; firewall it if the LAN should not reach it, or bind it to
+- `WHISPER_PORT=29300` (published on all interfaces; firewall it if the LAN should not reach it, or bind it to
   `127.0.0.1` in the `ports:` line of `stt_whisper_model_lb` when only callers on the machine need it).
 
 ## 3. Start
@@ -42,21 +42,21 @@ Create `.env` (deploy option 2 copies yours, or `cp .env.example .env` and edit)
 ```bash
 docker compose up -d --build
 docker compose ps
-curl http://127.0.0.1:9230/health
+curl http://127.0.0.1:29300/health
 ```
 The first start downloads about 150 MB of weights into the `stt_whisper_model_models` volume; `stt_whisper_model_lb` waits for a healthy service
 (up to 300 s grace).
 
 ## 4. Connect callers
 
-1. Open `http://<machine-ip>:9230/admin/`, sign in with the admin password and create one token per caller
+1. Open `http://<machine-ip>:29300/admin/`, sign in with the admin password and create one token per caller
    (see [guide-web-ui.md](guide-web-ui.md)).
 2. The caller holds the URL and token:
-   - Caller on another machine: `http://<machine-ip>:9230`.
-   - Caller in a Docker stack on the same machine: `http://host.docker.internal:9230`.
+   - Caller on another machine: `http://<machine-ip>:29300`.
+   - Caller in a Docker stack on the same machine: `http://host.docker.internal:29300`.
 3. Try a call from the machine:
    ```bash
-   ffmpeg -v error -i speech.wav -f s16le -ar 16000 -ac 1 - | curl -X POST http://127.0.0.1:9230/v1/transcribe -H "X-Internal-Token: whisper_..." --data-binary @-
+   ffmpeg -v error -i speech.wav -f s16le -ar 16000 -ac 1 - | curl -X POST http://127.0.0.1:29300/v1/transcribe -H "X-Internal-Token: whisper_..." --data-binary @-
    ```
 
 ## Scaling
@@ -87,7 +87,7 @@ A plain publish (`run.bat`, Deploy, option 1) only updates the `live` branch. Fo
 
 | Symptom | Fix |
 |---|---|
-| Caller cannot reach the service | Check the caller's URL and token, and that `curl http://<machine-ip>:9230/health` works. |
+| Caller cannot reach the service | Check the caller's URL and token, and that `curl http://<machine-ip>:29300/health` works. |
 | nginx 502 after an update | `docker compose restart stt_whisper_model_lb`. |
 | Permission denied on push | run.bat Deploy option 6. |
-| Port 9230 in use | Another stack on the machine already publishes it. |
+| Port 29300 in use | Another stack on the machine already publishes it. |

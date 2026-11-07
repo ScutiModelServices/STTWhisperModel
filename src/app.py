@@ -400,7 +400,7 @@ def main() -> None:
         client.num_thread = int(threads)
     app = create_app(client=client, admin_password=os.environ.get("WHISPER_ADMIN_PASSWORD") or None,
                      tokens=store, config=config)
-    uvicorn.run(app, host=os.environ.get("WHISPER_HOST", "127.0.0.1"), port=int(os.environ.get("WHISPER_PORT", "9230")))
+    uvicorn.run(app, host=os.environ.get("WHISPER_HOST", "127.0.0.1"), port=int(os.environ.get("WHISPER_PORT", "29300")))
 
 
 if __name__ == "__main__":

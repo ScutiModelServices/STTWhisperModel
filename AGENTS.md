@@ -1,6 +1,6 @@
 # STT_Whisper_Model
 
-faster-whisper (`base.en`, int8, CPU) served over HTTP, behind the shared model-service admin page, tokens and settings. Port 9230, env prefix `WHISPER_`, token prefix `whisper_`. The model half of `AI/ToolServices/Scribe` (which keeps ffmpeg, quota, uploads and live dictation). Requirements: `AI/ModelServices/_docs/WHISPER-SERVICE-REQUIREMENTS.md`.
+faster-whisper (`base.en`, int8, CPU) served over HTTP, behind the shared model-service admin page, tokens and settings. Port 29300, env prefix `WHISPER_`, token prefix `whisper_`. The model half of `AI/ToolServices/Scribe` (which keeps ffmpeg, quota, uploads and live dictation). Requirements: `AI/ModelServices/_docs/WHISPER-SERVICE-REQUIREMENTS.md`.
 
 ## Agent instructions
 This file is the one instruction file for every coding agent; `CLAUDE.md` only imports it (`@AGENTS.md`). Edit this file, never `CLAUDE.md`.
